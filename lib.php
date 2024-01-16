@@ -34,7 +34,7 @@ defined('MOODLE_INTERNAL') || die();
 function local_modcustomfields_coursemodule_standard_elements($formwrapper, $mform) {
 
     $data = $formwrapper->get_current();
-    if (!is_available_module($data->modulename)) {
+    if (empty($data->modulename) || !is_available_module($data->modulename)) {
         // Do not show custom fields if it's not available.
         return;
     }
@@ -67,7 +67,7 @@ function local_modcustomfields_coursemodule_standard_elements($formwrapper, $mfo
  */
 function local_modcustomfields_coursemodule_validation($formwrapper, $data) {
     $form = $formwrapper->get_current();
-    if (!is_available_module($form->modulename)) {
+    if (empty($data->modulename) || !is_available_module($form->modulename)) {
         // Do not validate if it's not available.
         return;
     }
