@@ -34,14 +34,9 @@ defined('MOODLE_INTERNAL') || die();
 function local_modcustomfields_coursemodule_standard_elements($formwrapper, $mform) {
 
     $data = $formwrapper->get_current();
-    // Disable custom fields if the current module is set disabled.
-    if (!empty($data->modulename)) {
-        $currentmodule = $data->modulename;
-        $disabledmodules = get_config('local_modcustomfields', 'disabledmodules');
-        $disabledmodules = explode(',', $disabledmodules);
-        if (in_array($currentmodule, $disabledmodules)) {
-            return;
-        }
+    if (empty($data->modulename) || !is_available_module($data->modulename)) {
+        // Do not show custom fields if it's not available.
+        return;
     }
 
     // Add custom fields to the form.
@@ -71,6 +66,11 @@ function local_modcustomfields_coursemodule_standard_elements($formwrapper, $mfo
  * @param \stdClass $data The form data.
  */
 function local_modcustomfields_coursemodule_validation($formwrapper, $data) {
+    $form = $formwrapper->get_current();
+    if (empty($data->modulename) || !is_available_module($form->modulename)) {
+        // Do not validate if it's not available.
+        return;
+    }
     $handler = local_modcustomfields\customfield\mod_handler::create();
     $handler->set_parent_context(context_course::instance($data['course']));
     return $handler->instance_form_validation($data, []);
@@ -88,4 +88,20 @@ function local_modcustomfields_coursemodule_edit_post_actions($moduleinfo, $cour
     $moduleinfo->id = $moduleinfo->coursemodule;
     $handler->instance_form_save($moduleinfo, true);
     return $moduleinfo;
+}
+
+/**
+ * Check if the module is available for this plugin.
+ *
+ * @param string $modulename the module name
+ */
+function is_available_module($modulename) {
+    if (!empty($modulename)) {
+        $disabledmodules = get_config('local_modcustomfields', 'disabledmodules');
+        $disabledmodules = explode(',', $disabledmodules);
+        if (in_array($modulename, $disabledmodules)) {
+            return false;
+        }
+    }
+    return true;
 }
