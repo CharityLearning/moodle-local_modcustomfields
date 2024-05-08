@@ -80,4 +80,24 @@ class lib_test extends advanced_testcase {
 
         \local_modcustomfields\customfield\mod_handler::reset_caches();
     }
+
+    /**
+     * Test that course module customfields data is populated correctly.
+     * @covers ::local_modcustomfields_coursemodule_edit_post_actions
+     */
+    public function test_local_modcustomfields_coursemodule_edit_post_actions(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $module = $this->getDataGenerator()->create_module('assign', ['course' => $course->id]);
+        [$course, $cm] = get_course_and_cm_from_cmid($module->cmid);
+        $PAGE->set_course($course);
+        list($cm, $context, $module, $data, $cw) = get_moduleinfo_data($cm, $course);
+
+        $dataid = $data->id;
+        local_modcustomfields_coursemodule_edit_post_actions($data, $course);
+        $this->assertEquals($dataid, $data->id);
+    }
 }
