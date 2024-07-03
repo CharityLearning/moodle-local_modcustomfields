@@ -63,11 +63,11 @@ function local_modcustomfields_coursemodule_standard_elements($formwrapper, $mfo
  * Validates the custom fields elements of all moodle module settings forms.
  *
  * @param moodleform $formwrapper The moodle quickforms wrapper object.
- * @param \stdClass $data The form data.
+ * @param array $data The form data.
  */
 function local_modcustomfields_coursemodule_validation($formwrapper, $data) {
     $form = $formwrapper->get_current();
-    if (empty($data->modulename) || !is_available_module($form->modulename)) {
+    if (empty($data['modulename']) || !is_available_module($form->modulename)) {
         // Do not validate if it's not available.
         return;
     }
