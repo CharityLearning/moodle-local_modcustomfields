@@ -98,8 +98,28 @@ class mod_handler extends \core_customfield\handler {
     public function can_edit(field_controller $field, int $instanceid = 0) : bool {
         if ($instanceid) {
             $context = $this->get_instance_context($instanceid);
-            return (!$field->get_configdata_property('locked') ||
+            $canedit = (!$field->get_configdata_property('locked') || 
                     has_capability('moodle/course:changelockedcustomfields', $context));
+            if ($canedit) {
+                $restricttypearr = $field->get_configdata_property('restricttoactivitytype');
+                if ($restricttypearr) {
+                    global $DB;
+                    $sql = '
+                        SELECT 
+                            m.name
+                        FROM
+                            {course_modules} cm
+                        INNER JOIN {modules} m
+                        ON
+                            m.id = cm.module
+                        WHERE
+                            cm.id = :coursemoduleid 
+                    ';
+                    $cmname = $DB->get_field_sql($sql, ['coursemoduleid' => $instanceid]);
+                    $canedit = in_array($cmname, $restricttypearr);
+                }
+            }
+            return $canedit;
         } else {
             $context = $this->get_parent_context();
             return (!$field->get_configdata_property('locked') ||
@@ -189,7 +209,7 @@ class mod_handler extends \core_customfield\handler {
      * @param \MoodleQuickForm $mform
      */
     public function config_form_definition(\MoodleQuickForm $mform) {
-        $mform->addElement('header', 'mod_handler_header', get_string('customfieldsettings', 'core_course'));
+        $mform->addElement('header', 'mod_handler_header', get_string('customfieldsettings', 'local_modcustomfields'));
         $mform->setExpanded('mod_handler_header', true);
 
         // If field is locked.
@@ -203,6 +223,16 @@ class mod_handler extends \core_customfield\handler {
         $mform->addElement('select', 'configdata[visibility]', get_string('customfield_visibility', 'core_course'),
             $visibilityoptions);
         $mform->addHelpButton('configdata[visibility]', 'customfield_visibility', 'core_course');
+
+        // Restrict to activity type
+        $pluginarr = [];
+        $pluginslist = array_keys(\core_component::get_plugin_list('mod'));
+        foreach ($pluginslist as $pluginkey) {
+            $pluginarr[$pluginkey] = get_string('modulename', $pluginkey);
+        }
+        $restricttoactivitytypeselect = $mform->addElement('select', 'configdata[restricttoactivitytype]', get_string('restricttoactivitytype', 'local_modcustomfields'), $pluginarr);
+        $restricttoactivitytypeselect->setMultiple(true);
+        $mform->addHelpButton('configdata[restricttoactivitytype]', 'restricttoactivitytype', 'local_modcustomfields');
     }
 
     /**
