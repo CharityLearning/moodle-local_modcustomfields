@@ -85,8 +85,13 @@ function local_modcustomfields_coursemodule_validation($formwrapper, $data) {
 function local_modcustomfields_coursemodule_edit_post_actions($moduleinfo, $course) {
     $handler = local_modcustomfields\customfield\mod_handler::create();
     $handler->set_parent_context(context_course::instance($course->id));
-    $moduleinfo->id = $moduleinfo->coursemodule;
-    $handler->instance_form_save($moduleinfo, true);
+
+    $instance = clone $moduleinfo;
+
+    $instance->id = $moduleinfo->coursemodule;
+    $handler->instance_form_save($instance, true);
+    unset($instance);
+
     return $moduleinfo;
 }
 
