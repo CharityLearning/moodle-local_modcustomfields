@@ -85,14 +85,13 @@ function local_modcustomfields_coursemodule_validation($formwrapper, $data) {
 function local_modcustomfields_coursemodule_edit_post_actions($moduleinfo, $course) {
     $handler = local_modcustomfields\customfield\mod_handler::create();
     $handler->set_parent_context(context_course::instance($course->id));
-    $moduleid = $moduleinfo->id ?? null;
-    $moduleinfo->id = $moduleinfo->coursemodule;
-    $handler->instance_form_save($moduleinfo, true);
-    if ($moduleid === null) {
-        unset($moduleinfo->id);
-    } else {
-        $moduleinfo->id = $moduleid;
-    }
+
+    $instance = clone $moduleinfo;
+
+    $instance->id = $moduleinfo->coursemodule;
+    $handler->instance_form_save($instance, true);
+    unset($instance);
+
     return $moduleinfo;
 }
 
